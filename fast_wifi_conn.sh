@@ -13,6 +13,8 @@ sudo nmcli dev wifi con $SSID_NAME_1 password "12345678"
 echo "Connect to "$SSID_NAME_1" successfully"
 echo "Sleep 5 seconds"
 sleep 5
+
+#Not do wifi disconnect to make wifi connection good or system will get wifi connection problem after test in the weekend.
 #echo "Disonnecting to "$SSID_NAME_1
 #sudo nmcli dev disconnect iface wlan0
 #res_1=$?
@@ -32,6 +34,8 @@ sudo nmcli dev wifi con $SSID_NAME_2 --timeout $SSID_NAME_2_TIMEOUT
 echo "Connect to "$SSID_NAME_2" successfully"
 echo "Sleep 5 seconds"
 sleep 5
+
+#Not do wifi disconnect to make wifi connection good or system will get wifi connection problem after test in the weekend.
 #echo "Disonnecting to "$SSID_NAME_2
 #sudo nmcli dev disconnect iface wlan0
 #res_2=$?
