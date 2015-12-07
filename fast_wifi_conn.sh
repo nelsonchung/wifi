@@ -28,6 +28,7 @@ if [ "$?" == 0 ]; then
             else
                 echo "Connect to "$SSID_NAME" successfully"
                 echo "Sleep 5 seconds"
+                ifconfig wlan0
                 sleep 5
                 count=`expr $CONNECTION_TIMEOUT + 1`
             fi
@@ -71,6 +72,7 @@ if [ "$?" == 0 ]; then
                 echo "Connect to "$SSID_NAME" successfully"
                 echo "Sleep 5 seconds"
                 sleep 5
+                ifconfig wlan0
                 count=`expr $CONNECTION_TIMEOUT + 2`
             fi
         done
