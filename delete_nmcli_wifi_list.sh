@@ -2,7 +2,7 @@
 source wifi_setting.sh
 
 #list now wifi connection list
-if [ "$UBUNTU_VER" == "15.04" ]; then
+if [ "$UBUNTU_VER" == "15.04" ] || [ "$UBUNTU_VER" == "16.04" ]; then
     nmcli connection show
 else
     nmcli c list

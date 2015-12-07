@@ -13,7 +13,7 @@ echo "Connecting to "$SSID_NAME
 #iwlist wlan0 scan | grep $SSID_NAME 
 nmcli -p dev wifi list | grep $SSID_NAME
 if [ "$?" == 0 ]; then
-    if [ "$UBUNTU_VER" == "15.04" ]; then
+    if [ "$UBUNTU_VER" == "15.04" ] || [ "$UBUNTU_VER" == "16.04" ]; then
         #nmcli device wifi connect $SSID_NAME password "12345678" ifname wlan0 
         nmcli device wifi connect $SSID_NAME password "12345678" ifname wlan0 > /dev/null 2>&1 
         count=1
@@ -57,7 +57,7 @@ echo "Connecting to "$SSID_NAME
 # with no security authentication
 nmcli -p dev wifi list | grep $SSID_NAME
 if [ "$?" == 0 ]; then
-    if [ "$UBUNTU_VER" == "15.04" ]; then
+    if [ "$UBUNTU_VER" == "15.04" ] || [ "$UBUNTU_VER" == "16.04" ]; then
         nmcli device wifi connect $SSID_NAME ifname wlan0 > /dev/null 2>&1
         count=1
         while [ $count -lt $CONNECTION_TIMEOUT ]
