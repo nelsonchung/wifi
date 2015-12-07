@@ -20,7 +20,8 @@ if [ "$?" == 0 ]; then
         while [ $count -lt $CONNECTION_TIMEOUT ]
         do
             #echo "Check the connection of $SSID_NAME"
-            nmcli device status | grep $SSID_NAME | grep "已連線" 
+            #nmcli device status | grep $SSID_NAME | grep "已連線" 
+            nmcli con status | grep $SSID_NAME
             if [ "$?" != 0 ]; then 
                 #echo "Not connect yet."
                 count=`expr $count + 1`
@@ -35,6 +36,14 @@ if [ "$?" == 0 ]; then
         done
     else
         sudo nmcli dev wifi con $SSID_NAME password "12345678"
+        result=$?
+        if [ $result -eq 0 ]; then
+            echo "Connect to "$SSID_NAME" successfully"
+            echo "Sleep 5 seconds"
+            ifconfig wlan0
+            sleep 5
+        fi
+
     fi
 else
     echo "Not found AP named $SSID_NAME"
@@ -63,7 +72,8 @@ if [ "$?" == 0 ]; then
         while [ $count -lt $CONNECTION_TIMEOUT ]
         do
             #echo "Check the connection of $SSID_NAME"
-            nmcli device status | grep $SSID_NAME | grep "已連線" 
+            #nmcli device status | grep $SSID_NAME | grep "已連線" 
+            nmcli con status | grep $SSID_NAME
             if [ "$?" != 0 ]; then 
                 #echo "Not connect yet."
                 count=`expr $count + 1`
@@ -71,8 +81,8 @@ if [ "$?" == 0 ]; then
             else
                 echo "Connect to "$SSID_NAME" successfully"
                 echo "Sleep 5 seconds"
-                sleep 5
                 ifconfig wlan0
+                sleep 5
                 count=`expr $CONNECTION_TIMEOUT + 2`
             fi
         done
@@ -87,6 +97,7 @@ if [ "$?" == 0 ]; then
         if [ $result -eq 0 ]; then
             echo "Connect to "$SSID_NAME" successfully"
             echo "Sleep 5 seconds"
+            ifconfig wlan0
             sleep 5
         else
             echo "Connect to "$SSID_NAME" fail. You need to check why fail"
