@@ -10,5 +10,5 @@ export SSID_NAME_2_TIMEOUT=600
 #Description:	Ubuntu 15.04
 #Release:	15.04
 #Codename:	vivid
-Ubuntu_Ver=`lsb_release -a | grep "Description:" | awk -F " " '{print $3}'`
+Ubuntu_Ver=`lsb_release -a | grep "Release:" | awk -F " " '{print $3}'`
 export UBUNTU_VER=$Ubuntu_Ver
