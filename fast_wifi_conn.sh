@@ -130,5 +130,45 @@ sudo nmcli con delete id $SSID_NAME_1
 sudo nmcli con delete id $SSID_NAME_2
 #fi
 
+SSID_NAME=$SSID_NAME_3
+echo "Connecting to "$SSID_NAME
+#iwlist wlan0 scan | grep $SSID_NAME 
+nmcli -p dev wifi list | grep $SSID_NAME
+if [ "$?" == 0 ]; then
+    if [ "$UBUNTU_VER" == "15.04" ] || [ "$UBUNTU_VER" == "16.04" ]; then
+        #nmcli device wifi connect $SSID_NAME password "12345678" ifname wlan0 
+        nmcli device wifi connect $SSID_NAME password "12345678" ifname wlan0 > /dev/null 2>&1 
+        count=1
+        while [ $count -lt $CONNECTION_TIMEOUT ]
+        do
+            #echo "Check the connection of $SSID_NAME"
+            #nmcli device status | grep $SSID_NAME | grep "已連線" 
+            nmcli con status | grep $SSID_NAME
+            if [ "$?" != 0 ]; then 
+                #echo "Not connect yet."
+                count=`expr $count + 1`
+                sleep 1
+            else
+                echo "Connect to "$SSID_NAME" successfully"
+                echo "Sleep 5 seconds"
+                ifconfig wlan0
+                sleep 5
+                count=`expr $CONNECTION_TIMEOUT + 1`
+            fi
+        done
+    else
+        sudo nmcli dev wifi con $SSID_NAME password "12345678"
+        result=$?
+        if [ $result -eq 0 ]; then
+            echo "Connect to "$SSID_NAME" successfully"
+            echo "Sleep 5 seconds"
+            ifconfig wlan0
+            sleep 5
+        fi
+
+    fi
+else
+    echo "Not found AP named $SSID_NAME"
+fi
 sleep 1  
 done
