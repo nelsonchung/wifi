@@ -8,13 +8,18 @@ else
     nmcli c list
 fi
 
-sudo nmcli con delete id $SSID_NAME_1 
-sudo nmcli con delete id $SSID_NAME_2 
-for i in $(seq 1 10)
+filename='tmp.txt'
+nmcli c list | awk -F ' ' '{print $1 " " $2}' > $filename
+exec < $filename
+
+while read line
 do
-#sample command
-#sudo nmcli con delete id "00Nelson_24G_Private $i"
-sudo nmcli con delete id "$SSID_NAME_1 $i"
-sudo nmcli con delete id "$SSID_NAME_2 $i"
+    if echo "$line" | grep -q '[0-9]'; then
+    #it means $line is number
+        echo "Run command; sudo nmcli con delete id \"$line\""
+        sudo nmcli con delete id "$line"
+        sleep 3
+    fi
 done
+rm $filename
 
