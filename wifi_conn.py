@@ -2,6 +2,9 @@
 
 # This script shows how to connect to a WPA protected WiFi network
 # by communicating through D-Bus to NetworkManager 0.9.
+# 
+# 2015/12/4
+# Nelson add new feature to connect no security protected WiFi network
 #
 # Reference URLs:
 # http://projects.gnome.org/NetworkManager/developers/
@@ -94,6 +97,7 @@ if __name__ == "__main__":
             },
         }
     else:
+        # I am not sure if we need to study this ducoment: https://developer.gnome.org/NetworkManager/stable/ref-settings.html
         print "NelsonDBG enter else "
         connection_params = {
        #     "802-11-wireless": {
@@ -148,11 +152,12 @@ if __name__ == "__main__":
     # forever.
     # Some pre-init cleanup feature should be devised to deal with this problem,
     # but this is an issue for another topic.
-    manager.DeactivateConnection(connection_path)
-    settings = dbus.Interface(
-        bus.get_object("org.freedesktop.NetworkManager", settings_path),
-        "org.freedesktop.NetworkManager.Settings.Connection")
-    settings.Delete()
+    ##manager.DeactivateConnection(connection_path)
+    ##settings = dbus.Interface(
+    ##    bus.get_object("org.freedesktop.NetworkManager", settings_path),
+    ##    "org.freedesktop.NetworkManager.Settings.Connection")
+    ##settings.Delete()
+
 
     # Disable Wireless (optional step)
     if not was_wifi_enabled:
