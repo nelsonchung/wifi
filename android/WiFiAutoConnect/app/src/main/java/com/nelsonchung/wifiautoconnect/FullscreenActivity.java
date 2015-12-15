@@ -2,14 +2,18 @@ package com.nelsonchung.wifiautoconnect;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.os.SystemClock;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -71,6 +75,19 @@ public class FullscreenActivity extends AppCompatActivity {
             hide();
         }
     };
+
+    //Nelson add
+    public static final int TIMEOUT = 30;
+    WifiManager wifiManager;
+    int netid_24g_wpawpa2;
+    int netid_24g_open;
+    int timeout;
+    String ssid_24g_wpawpa2 = new String("1-TELENET-24g");
+    String key_24g_wpawpa2 = new String("12345678");
+    String ssid_24g_open = new String("1-TELENETHOMESPOT-24g");
+    ConnectivityManager connManager;
+    NetworkInfo mWifi;
+
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
      * system UI. This is to prevent the jarring behavior of controls going away
@@ -114,31 +131,113 @@ public class FullscreenActivity extends AppCompatActivity {
         wifi_auto_connection();
     }
 
+    /*
+    Ref:
+    http://stackoverflow.com/questions/8818290/how-to-connect-to-a-specific-wifi-network-in-android-programmatically
+     */
     private void wifi_auto_connection(){
-        String ssid = new String("1-TELENET-24g");
-        String key = new String("12345678");
-        WifiConfiguration wifiConfig = new WifiConfiguration();
 
-        wifiConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-        wifiConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-        wifiConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-        wifiConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-        wifiConfig.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-        wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-        wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-        wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-        wifiConfig.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+        //wifi manager
+        wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
 
-        wifiConfig.SSID = String.format("\"%s\"", ssid);
-        wifiConfig.preSharedKey = String.format("\"%s\"", key);
+        //wifi connection status
+        connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-        WifiManager wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+
+        WifiConfiguration wificonfig_24g_wpawpa2 = new WifiConfiguration();
+        WifiConfiguration wificonfig_24g_open = new WifiConfiguration();
+        WifiConfiguration wificonfig_24g_wep = new WifiConfiguration();
+        WifiConfiguration wificonfig_5g_wpawpa2 = new WifiConfiguration();
+        WifiConfiguration wificonfig_5g_open = new WifiConfiguration();
+        WifiConfiguration wificonfig_5g_wep = new WifiConfiguration();
+
+        //For Open networks
+        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wificonfig_24g_open.allowedAuthAlgorithms.clear();
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+
+        wificonfig_24g_open.SSID = String.format("\"%s\"", ssid_24g_open);
+
+        //For WPA and WPA2
+        wificonfig_24g_wpawpa2.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wificonfig_24g_wpawpa2.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wificonfig_24g_wpawpa2.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+        wificonfig_24g_wpawpa2.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        wificonfig_24g_wpawpa2.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+
+        wificonfig_24g_wpawpa2.SSID = String.format("\"%s\"", ssid_24g_wpawpa2);
+        wificonfig_24g_wpawpa2.preSharedKey = String.format("\"%s\"", key_24g_wpawpa2);
 
 //remember id
-        int netId = wifiManager.addNetwork(wifiConfig);
+        //Add wifi network config
+        netid_24g_wpawpa2 = wifiManager.addNetwork(wificonfig_24g_wpawpa2);
+        netid_24g_open = wifiManager.addNetwork(wificonfig_24g_open);
+
+        cleartimeout();
+        connect_24g_wpawpa2();
+        connect_24g_open();
+
+    }
+
+    private void showoutput(String stroutput){
+        TextView output = (TextView)findViewById(R.id.output);
+        output.setText(stroutput);
+    }
+
+    private void cleartimeout(){
+        timeout=0;
+    }
+    private void checkwifistatus(String str_ssid){
+        while (!mWifi.isConnected() && timeout<TIMEOUT) {
+            showoutput("Connecting to " + str_ssid);
+            SystemClock.sleep(1000);
+            timeout++;
+        }
+    }
+    private void connect_24g_wpawpa2(){
+        cleartimeout();
+
         wifiManager.disconnect();
-        wifiManager.enableNetwork(netId, true);
+        wifiManager.enableNetwork(netid_24g_wpawpa2, true);
         wifiManager.reconnect();
+
+        checkwifistatus(ssid_24g_wpawpa2);
+
+        if( timeout <= TIMEOUT)
+            showoutput("Connect to " + ssid_24g_wpawpa2 + " successfully.");
+        else
+            showoutput("Connect to " + ssid_24g_wpawpa2 + " fail.");
+    }
+    private void connect_24g_open(){
+        cleartimeout();
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(netid_24g_open, true);
+        wifiManager.reconnect();
+
+        checkwifistatus(ssid_24g_open);
+
+        if( timeout <= TIMEOUT)
+            showoutput("Connect to " + ssid_24g_open + " successfully.");
+        else
+            showoutput("Connect to " + ssid_24g_open + " fail.");
+    }
+    private void connect_5g_wpawpa2(){
+
+    }
+    private void connect_5g_open(){
+
     }
 
     @Override

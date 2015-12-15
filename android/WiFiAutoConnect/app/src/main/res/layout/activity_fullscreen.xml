@@ -45,6 +45,13 @@
                 android:text="@string/dummy_button" />
 
         </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NelsonTest"
+            android:id="@+id/output"
+            android:layout_gravity="center" />
     </FrameLayout>
 
 </FrameLayout>
