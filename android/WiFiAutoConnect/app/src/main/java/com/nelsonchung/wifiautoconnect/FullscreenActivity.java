@@ -1,16 +1,22 @@
 package com.nelsonchung.wifiautoconnect;
 
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.HandlerThread;
+import android.os.Message;
 import android.os.SystemClock;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.TextView;
@@ -78,15 +84,36 @@ public class FullscreenActivity extends AppCompatActivity {
 
     //Nelson add
     public static final int TIMEOUT = 30;
-    WifiManager wifiManager;
-    int netid_24g_wpawpa2;
-    int netid_24g_open;
-    int timeout;
-    String ssid_24g_wpawpa2 = new String("1-TELENET-24g");
-    String key_24g_wpawpa2 = new String("12345678");
-    String ssid_24g_open = new String("1-TELENETHOMESPOT-24g");
-    ConnectivityManager connManager;
-    NetworkInfo mWifi;
+    public static final int MSG_START = 1;
+    public static final int MSG_DISCONNECT = 2;
+    public static final int MSG_CONNECT_SUCCESSFUL = 3;
+    public static final int MSG_24G_WPAWPA2_DISCONNECT = 4;
+    public static final int MSG_24G_WPAWPA2_CONNECTING = 5;
+    public static final int MSG_24G_WPAWPA2_CONNECT = 6;
+    public static final int MSG_24G_WPAWPA2_FAIL = 7;
+    public static final int MSG_24G_OPEN_DISCONNECT = 8;
+    public static final int MSG_24G_OPEN_CONNECTING = 9;
+    public static final int MSG_24G_OPEN_CONNECT = 10;
+    public static final int MSG_24G_OPEN_FAIL = 11;
+    public static final int MSG_WIFI_DISABLE = 12;
+
+    private WifiManager wifiManager;
+    private int netid_24g_wpawpa2;
+    private int netid_24g_open;
+    private int timeout;
+    //private String ssid_24g_wpawpa2 = new String("1-TELENET-24g");
+    private String ssid_24g_wpawpa2 = new String("00Nelson_24G_Private");
+    private String key_24g_wpawpa2 = new String("12345678");
+    //private String ssid_24g_open = new String("1-TELENETHOMESPOT-24g");
+    private String ssid_24g_open = new String("TELENETHOMESPOT");
+    private ConnectivityManager connManager;
+    private NetworkInfo mWifi;
+    SupplicantState supState;
+    private Handler g_handler, g_handlerUI;
+    private HandlerThread g_handlerthread, g_handlerthreadUI;
+    TextView output;
+    private String g_strWiFiStatus = new String("Under testing.....");
+
 
     /**
      * Touch listener to use for in-layout UI controls to delay hiding the
@@ -128,15 +155,113 @@ public class FullscreenActivity extends AppCompatActivity {
         findViewById(R.id.dummy_button).setOnTouchListener(mDelayHideTouchListener);
 
         //Nelson add
-        wifi_auto_connection();
+        /* show ok
+        AlertDialog.Builder aaa = new AlertDialog.Builder(this);
+        aaa.setTitle("");
+        aaa.setMessage("Start testing");
+        aaa.show();
+        */
+        output = (TextView)findViewById(R.id.output);
+
+        //handle 1
+        g_handlerthread = new HandlerThread("do_wifi_auto_connect");
+        g_handlerthread.start();
+        g_handler = new Handler(g_handlerthread.getLooper());
+        g_handler.post(runner);
+
+        //handle 2: update wifi connection status
+        /*
+        g_handlerthreadUI = new HandlerThread("up_wifi_connection_ui");
+        g_handlerthreadUI.start();
+        g_handlerUI = new Handler(g_handlerthreadUI.getLooper());
+        g_handlerUI.post(UpdateWiFiConnectionStatus);
+        */
+        /*
+        g_handler = new Handler();
+        g_handlerUI.postDelayed(UpdateWiFiConnectionStatus, 1000);
+        */
     }
 
+    Handler myMessengeHandler = new Handler() {
+        public void handleMessage(Message msg){
+            switch(msg.what) {
+                case MSG_START:
+                    output.setText("Starting...................");
+                    break;
+                case MSG_DISCONNECT:
+                    output.setText("Disconnecting...............");
+                    break;
+                case MSG_CONNECT_SUCCESSFUL:
+                    output.setText("Connecting...............");
+                    break;
+                case MSG_24G_OPEN_DISCONNECT:
+                    output.setText("Disconnecting from "+ssid_24g_open);
+                    break;
+                case MSG_24G_OPEN_CONNECTING:
+                    output.setText("Connecting to "+ssid_24g_open+" "+timeout+" times");
+                    break;
+                case MSG_24G_OPEN_CONNECT:
+                    output.setText("Connect to "+ssid_24g_open+" successfully");
+                    break;
+                case MSG_24G_OPEN_FAIL:
+                    output.setText("Connect to "+ssid_24g_open+" fail");
+                    break;
+                case MSG_24G_WPAWPA2_DISCONNECT:
+                    output.setText("Disconnecting from "+ssid_24g_wpawpa2);
+                    break;
+                case MSG_24G_WPAWPA2_CONNECTING:
+                    output.setText("Connecting to "+ssid_24g_wpawpa2+" "+timeout+" times");
+                    break;
+                case MSG_24G_WPAWPA2_CONNECT:
+                    output.setText("Connect to "+ssid_24g_wpawpa2+" successfully");
+                    break;
+                case MSG_24G_WPAWPA2_FAIL:
+                    output.setText("Connect to "+ssid_24g_wpawpa2+" fail");
+                    break;
+                case MSG_WIFI_DISABLE:
+                    output.setText("WiFi關閉，請打開。");
+                    break;
+                default:
+                    output.setText("Not supported");
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+    /*
+    private Runnable UpdateWiFiConnectionStatus = new Runnable(){
+        public void run() {
+            while (true) {
+                try {
+                    Thread.sleep(1000);
+                }
+                catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                //Check crash
+                //output.setText(g_strWiFiStatus);
+            }
+        }
+    };
+    */
+
+    private Runnable runner = new Runnable() {
+        @Override
+        public void run() {
+            wifi_auto_connection();
+        }
+    };
+
+    private void updateoutput(int def){
+        Message m = new Message();
+        m.what = def;
+        FullscreenActivity.this.myMessengeHandler.sendMessage(m);
+    }
     /*
     Ref:
     http://stackoverflow.com/questions/8818290/how-to-connect-to-a-specific-wifi-network-in-android-programmatically
      */
     private void wifi_auto_connection(){
-
         //wifi manager
         wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
 
@@ -144,6 +269,11 @@ public class FullscreenActivity extends AppCompatActivity {
         connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
+        if(!wifiManager.isWifiEnabled()){
+            updateoutput(MSG_WIFI_DISABLE);
+            SystemClock.sleep(3000);
+            finish();
+        }
 
         WifiConfiguration wificonfig_24g_wpawpa2 = new WifiConfiguration();
         WifiConfiguration wificonfig_24g_open = new WifiConfiguration();
@@ -185,25 +315,64 @@ public class FullscreenActivity extends AppCompatActivity {
         netid_24g_wpawpa2 = wifiManager.addNetwork(wificonfig_24g_wpawpa2);
         netid_24g_open = wifiManager.addNetwork(wificonfig_24g_open);
 
-        cleartimeout();
-        connect_24g_wpawpa2();
-        connect_24g_open();
-
+        updateoutput(MSG_START);
+        while(true) {
+            connect_24g_wpawpa2();
+            SystemClock.sleep(3000);
+            connect_24g_open();
+            SystemClock.sleep(3000);
+        }
     }
 
     private void showoutput(String stroutput){
+
+        String.format(g_strWiFiStatus, stroutput);
+        /* move code to thread, maybe we can't use original design to show message
         TextView output = (TextView)findViewById(R.id.output);
         output.setText(stroutput);
+        */
+        /* can't show successful in thread
+        AlertDialog.Builder outputdialog = new AlertDialog.Builder(this);
+        outputdialog.setTitle("");
+        outputdialog.setMessage(stroutput);
+        outputdialog.show();
+        */
     }
 
     private void cleartimeout(){
         timeout=0;
     }
     private void checkwifistatus(String str_ssid){
-        while (!mWifi.isConnected() && timeout<TIMEOUT) {
-            showoutput("Connecting to " + str_ssid);
-            SystemClock.sleep(1000);
+    //private void checkwifistatus(){
+
+        supState = wifiManager.getConnectionInfo().getSupplicantState();
+
+        /*
+        //The mechanism is strange.
+        isConnected is false when wifi disable
+        isConnected is true when wifi enable
+        isAvailable is alwalys true whether wifi is enable or disable
+        while ( !mWifi.isAvailable() ||
+            (!mWifi.isConnected() && timeout<TIMEOUT)
+        */
+        //Ref: http://developer.android.com/reference/android/net/wifi/SupplicantState.html
+        while (supState != SupplicantState.COMPLETED && timeout < TIMEOUT) {
+            //showoutput("Connecting to " + str_ssid);
+            //SystemClock.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e){
+                e.printStackTrace();
+            }
             timeout++;
+            if(str_ssid.equalsIgnoreCase(ssid_24g_open)){
+                updateoutput(MSG_24G_OPEN_CONNECTING);
+            }
+            else if(str_ssid.equalsIgnoreCase(ssid_24g_wpawpa2)){
+                updateoutput(MSG_24G_WPAWPA2_CONNECTING);
+            }
+            supState = wifiManager.getConnectionInfo().getSupplicantState();
         }
     }
     private void connect_24g_wpawpa2(){
@@ -213,25 +382,35 @@ public class FullscreenActivity extends AppCompatActivity {
         wifiManager.enableNetwork(netid_24g_wpawpa2, true);
         wifiManager.reconnect();
 
+        updateoutput(MSG_24G_WPAWPA2_CONNECTING);
+        SystemClock.sleep(1000);
         checkwifistatus(ssid_24g_wpawpa2);
+        //checkwifistatus();
 
-        if( timeout <= TIMEOUT)
-            showoutput("Connect to " + ssid_24g_wpawpa2 + " successfully.");
+        if( timeout < TIMEOUT)
+            //showoutput("Connect to " + ssid_24g_wpawpa2 + " successfully.");
+            updateoutput(MSG_24G_WPAWPA2_CONNECT);
         else
-            showoutput("Connect to " + ssid_24g_wpawpa2 + " fail.");
+            updateoutput(MSG_24G_WPAWPA2_FAIL);
     }
+
     private void connect_24g_open(){
         cleartimeout();
         wifiManager.disconnect();
         wifiManager.enableNetwork(netid_24g_open, true);
         wifiManager.reconnect();
 
+        updateoutput(MSG_24G_OPEN_CONNECTING);
+        SystemClock.sleep(1000);
+        //checkwifistatus();
         checkwifistatus(ssid_24g_open);
 
-        if( timeout <= TIMEOUT)
-            showoutput("Connect to " + ssid_24g_open + " successfully.");
+        if( timeout < TIMEOUT)
+            //showoutput("Connect to " + ssid_24g_open + " successfully.");
+            updateoutput(MSG_24G_OPEN_CONNECT);
         else
-            showoutput("Connect to " + ssid_24g_open + " fail.");
+            //showoutput("Connect to " + ssid_24g_open + " fail.");
+            updateoutput(MSG_24G_OPEN_FAIL);
     }
     private void connect_5g_wpawpa2(){
 
@@ -291,5 +470,19 @@ public class FullscreenActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    protected void onDestory(){
+
+        super.onDestroy();
+
+        if(g_handler!=null){
+            g_handler.removeCallbacks(runner);
+        }
+
+        if(g_handlerthread!=null){
+            g_handlerthread.quit();
+        }
+
     }
 }
