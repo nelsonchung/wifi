@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 
 /**
@@ -84,6 +85,7 @@ public class FullscreenActivity extends AppCompatActivity {
 
     //Nelson add
     public static final int TIMEOUT = 30;
+    public static final int TIMEOUT_BETWEEN_CONNECTION = 5000;
     public static final int MSG_START = 1;
     public static final int MSG_DISCONNECT = 2;
     public static final int MSG_CONNECT_SUCCESSFUL = 3;
@@ -98,14 +100,13 @@ public class FullscreenActivity extends AppCompatActivity {
     public static final int MSG_WIFI_DISABLE = 12;
 
     private WifiManager wifiManager;
-    private int netid_24g_wpawpa2;
-    private int netid_24g_open;
+    private int netid_24g_wpawpa2, netid_24g_open, netid_24g_eap;
     private int timeout;
-    //private String ssid_24g_wpawpa2 = new String("1-TELENET-24g");
+
     private String ssid_24g_wpawpa2 = new String("00Nelson_24G_Private");
     private String key_24g_wpawpa2 = new String("12345678");
-    //private String ssid_24g_open = new String("1-TELENETHOMESPOT-24g");
     private String ssid_24g_open = new String("TELENETHOMESPOT");
+
     private ConnectivityManager connManager;
     private NetworkInfo mWifi;
     SupplicantState supState;
@@ -113,6 +114,16 @@ public class FullscreenActivity extends AppCompatActivity {
     private HandlerThread g_handlerthread, g_handlerthreadUI;
     TextView output;
     private String g_strWiFiStatus = new String("Under testing.....");
+    private EditText edittext_ssid_24g_wpawpa2, edittext_ssid_24g_password, edittext_ssid_24g_open;
+
+    //wifi configuration
+    WifiConfiguration wificonfig_24g_wpawpa2 = new WifiConfiguration();
+    WifiConfiguration wificonfig_24g_open = new WifiConfiguration();
+    WifiConfiguration wificonfig_24g_wep = new WifiConfiguration();
+    WifiConfiguration wificonfig_5g_wpawpa2 = new WifiConfiguration();
+    WifiConfiguration wificonfig_5g_open = new WifiConfiguration();
+    WifiConfiguration wificonfig_5g_wep = new WifiConfiguration();
+
 
 
     /**
@@ -140,12 +151,17 @@ public class FullscreenActivity extends AppCompatActivity {
         mControlsView = findViewById(R.id.fullscreen_content_controls);
         mContentView = findViewById(R.id.fullscreen_content);
 
+        //Nelson Add
+        edittext_ssid_24g_wpawpa2 = (EditText) findViewById(R.id.ssid_24g_wpawpa2);
+        edittext_ssid_24g_password = (EditText) findViewById(R.id.ssid_24g_wpawpa2_password);
+        edittext_ssid_24g_open = (EditText) findViewById(R.id.ssid_24g_open);
+
 
         // Set up the user interaction to manually show or hide the system UI.
         mContentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                toggle();
+                //toggle();
             }
         });
 
@@ -168,19 +184,8 @@ public class FullscreenActivity extends AppCompatActivity {
         g_handlerthread.start();
         g_handler = new Handler(g_handlerthread.getLooper());
         g_handler.post(runner);
-
-        //handle 2: update wifi connection status
-        /*
-        g_handlerthreadUI = new HandlerThread("up_wifi_connection_ui");
-        g_handlerthreadUI.start();
-        g_handlerUI = new Handler(g_handlerthreadUI.getLooper());
-        g_handlerUI.post(UpdateWiFiConnectionStatus);
-        */
-        /*
-        g_handler = new Handler();
-        g_handlerUI.postDelayed(UpdateWiFiConnectionStatus, 1000);
-        */
     }
+
 
     Handler myMessengeHandler = new Handler() {
         public void handleMessage(Message msg){
@@ -228,22 +233,6 @@ public class FullscreenActivity extends AppCompatActivity {
             super.handleMessage(msg);
         }
     };
-    /*
-    private Runnable UpdateWiFiConnectionStatus = new Runnable(){
-        public void run() {
-            while (true) {
-                try {
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e){
-                    e.printStackTrace();
-                }
-                //Check crash
-                //output.setText(g_strWiFiStatus);
-            }
-        }
-    };
-    */
 
     private Runnable runner = new Runnable() {
         @Override
@@ -256,6 +245,92 @@ public class FullscreenActivity extends AppCompatActivity {
         Message m = new Message();
         m.what = def;
         FullscreenActivity.this.myMessengeHandler.sendMessage(m);
+    }
+
+    private void DisableWiFiOpen(){
+        SystemClock.sleep(2000);
+        wifiManager.disableNetwork(netid_24g_open);
+        wifiManager.removeNetwork(netid_24g_open);
+    }
+    private void DisableWiFiWpa(){
+        SystemClock.sleep(2000);
+        wifiManager.disableNetwork(netid_24g_wpawpa2);
+        wifiManager.removeNetwork(netid_24g_wpawpa2);
+    }
+
+    private void AddWiFiConfigWpa(){
+
+        cleartimeout();
+        updateoutput(MSG_DISCONNECT);
+
+        ssid_24g_wpawpa2    = edittext_ssid_24g_wpawpa2.getText().toString();
+        key_24g_wpawpa2     = edittext_ssid_24g_password.getText().toString();
+
+        //For WPA and WPA2
+        wificonfig_24g_wpawpa2.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wificonfig_24g_wpawpa2.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wificonfig_24g_wpawpa2.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+        wificonfig_24g_wpawpa2.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        wificonfig_24g_wpawpa2.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+
+        wificonfig_24g_wpawpa2.SSID = String.format("\"%s\"", ssid_24g_wpawpa2);
+        wificonfig_24g_wpawpa2.preSharedKey = String.format("\"%s\"", key_24g_wpawpa2);
+
+        //Add wifi network config
+        netid_24g_wpawpa2 = wifiManager.addNetwork(wificonfig_24g_wpawpa2);
+    }
+    private void AddWiFiConfigOpen(){
+
+        cleartimeout();
+        updateoutput(MSG_DISCONNECT);
+
+        ssid_24g_open       = edittext_ssid_24g_open.getText().toString();
+
+        //For Open networks
+        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wificonfig_24g_open.allowedAuthAlgorithms.clear();
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+
+        wificonfig_24g_open.SSID = String.format("\"%s\"", ssid_24g_open);
+
+        netid_24g_open = wifiManager.addNetwork(wificonfig_24g_open);
+    }
+    private void AddWiFiConfigWep(){
+        //we need to modify wificonfig_24g_open to another wep parameter
+        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wificonfig_24g_open.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
+        wificonfig_24g_open.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.SHARED);
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+    }
+    private void AddWiFiConfigEap(){
+        //For EAP(8021X) networks
+        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
+        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wificonfig_24g_open.allowedAuthAlgorithms.clear();
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
     }
     /*
     Ref:
@@ -275,52 +350,11 @@ public class FullscreenActivity extends AppCompatActivity {
             finish();
         }
 
-        WifiConfiguration wificonfig_24g_wpawpa2 = new WifiConfiguration();
-        WifiConfiguration wificonfig_24g_open = new WifiConfiguration();
-        WifiConfiguration wificonfig_24g_wep = new WifiConfiguration();
-        WifiConfiguration wificonfig_5g_wpawpa2 = new WifiConfiguration();
-        WifiConfiguration wificonfig_5g_open = new WifiConfiguration();
-        WifiConfiguration wificonfig_5g_wep = new WifiConfiguration();
-
-        //For Open networks
-        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-        wificonfig_24g_open.allowedAuthAlgorithms.clear();
-        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-
-        wificonfig_24g_open.SSID = String.format("\"%s\"", ssid_24g_open);
-
-        //For WPA and WPA2
-        wificonfig_24g_wpawpa2.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-        wificonfig_24g_wpawpa2.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-        wificonfig_24g_wpawpa2.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-        wificonfig_24g_wpawpa2.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-        wificonfig_24g_wpawpa2.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-        wificonfig_24g_wpawpa2.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-
-        wificonfig_24g_wpawpa2.SSID = String.format("\"%s\"", ssid_24g_wpawpa2);
-        wificonfig_24g_wpawpa2.preSharedKey = String.format("\"%s\"", key_24g_wpawpa2);
-
-//remember id
-        //Add wifi network config
-        netid_24g_wpawpa2 = wifiManager.addNetwork(wificonfig_24g_wpawpa2);
-        netid_24g_open = wifiManager.addNetwork(wificonfig_24g_open);
-
         updateoutput(MSG_START);
+
         while(true) {
             connect_24g_wpawpa2();
-            SystemClock.sleep(3000);
             connect_24g_open();
-            SystemClock.sleep(3000);
         }
     }
 
@@ -376,8 +410,7 @@ public class FullscreenActivity extends AppCompatActivity {
         }
     }
     private void connect_24g_wpawpa2(){
-        cleartimeout();
-
+        AddWiFiConfigWpa();
         wifiManager.disconnect();
         wifiManager.enableNetwork(netid_24g_wpawpa2, true);
         wifiManager.reconnect();
@@ -392,10 +425,14 @@ public class FullscreenActivity extends AppCompatActivity {
             updateoutput(MSG_24G_WPAWPA2_CONNECT);
         else
             updateoutput(MSG_24G_WPAWPA2_FAIL);
+
+        DisableWiFiWpa();
+        SystemClock.sleep(TIMEOUT_BETWEEN_CONNECTION);
+
     }
 
-    private void connect_24g_open(){
-        cleartimeout();
+    private void connect_24g_open() {
+        AddWiFiConfigOpen();
         wifiManager.disconnect();
         wifiManager.enableNetwork(netid_24g_open, true);
         wifiManager.reconnect();
@@ -411,6 +448,9 @@ public class FullscreenActivity extends AppCompatActivity {
         else
             //showoutput("Connect to " + ssid_24g_open + " fail.");
             updateoutput(MSG_24G_OPEN_FAIL);
+
+        DisableWiFiOpen();
+        SystemClock.sleep(TIMEOUT_BETWEEN_CONNECTION);
     }
     private void connect_5g_wpawpa2(){
 

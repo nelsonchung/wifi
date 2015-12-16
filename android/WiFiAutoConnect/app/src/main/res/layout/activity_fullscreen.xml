@@ -21,9 +21,10 @@
 
     <!-- This FrameLayout insets its children based on system windows using
          android:fitsSystemWindows. -->
+
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="650dp"
         android:fitsSystemWindows="true">
 
         <LinearLayout
@@ -47,11 +48,67 @@
         </LinearLayout>
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="490dp"
+            android:layout_height="48dp"
             android:text="WiFi auto connection test"
             android:id="@+id/output"
-            android:layout_gravity="center" />
+            android:layout_gravity="center|top" />
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            android:layout_gravity="center_horizontal|bottom">
+
+            <TextView
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:text="1. SSID with wpa/wpa2 security mode"
+                android:id="@+id/textView_ssid_24g_wpa"
+                android:layout_gravity="left|top" />
+
+            <EditText
+                android:layout_width="341dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/ssid_24g_wpawpa2"
+                android:layout_gravity="center_horizontal|top"
+                android:text="00Nelson_24G_Private" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Password"
+                android:id="@+id/textView_ssid_24g_wpawpa2"
+                android:layout_column="0" />
+
+            <EditText
+                android:layout_width="341dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/ssid_24g_wpawpa2_password"
+                android:layout_gravity="center_horizontal|top"
+                android:text="12345678" />
+
+            <TextView
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:text="2. SSID with open system"
+                android:id="@+id/textView_ssid_24g_open"
+                android:layout_gravity="center_horizontal|left|top" />
+
+            <EditText
+                android:layout_width="348dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/ssid_24g_open"
+                android:layout_gravity="center_horizontal|top"
+                android:text="TELENETHOMESPOT" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            </TableRow>
+
+        </TableLayout>
+
     </FrameLayout>
 
 </FrameLayout>
