@@ -16,6 +16,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -98,6 +99,7 @@ public class FullscreenActivity extends AppCompatActivity {
     public static final int MSG_24G_OPEN_CONNECT = 10;
     public static final int MSG_24G_OPEN_FAIL = 11;
     public static final int MSG_WIFI_DISABLE = 12;
+    public static final int MSG_WIFI_WAITING_IP_ADDRESS = 13;
 
     private WifiManager wifiManager;
     private int netid_24g_wpawpa2, netid_24g_open, netid_24g_eap;
@@ -106,6 +108,7 @@ public class FullscreenActivity extends AppCompatActivity {
     private String ssid_24g_wpawpa2 = new String("00Nelson_24G_Private");
     private String key_24g_wpawpa2 = new String("12345678");
     private String ssid_24g_open = new String("TELENETHOMESPOT");
+    public static final String zeroipaddress = new String("0.0.0.0");
 
     private ConnectivityManager connManager;
     private NetworkInfo mWifi;
@@ -225,6 +228,9 @@ public class FullscreenActivity extends AppCompatActivity {
                     break;
                 case MSG_WIFI_DISABLE:
                     output.setText("WiFi關閉，請打開。");
+                    break;
+                case MSG_WIFI_WAITING_IP_ADDRESS:
+                    output.setText("Waiting for valid ip address");
                     break;
                 default:
                     output.setText("Not supported");
@@ -408,6 +414,19 @@ public class FullscreenActivity extends AppCompatActivity {
             }
             supState = wifiManager.getConnectionInfo().getSupplicantState();
         }
+
+        //check ip address is ready
+        int ip = wifiManager.getConnectionInfo().getIpAddress();
+        String ipAddress = Formatter.formatIpAddress(ip);
+        while(ipAddress.equalsIgnoreCase(zeroipaddress) && timeout < TIMEOUT){
+        //while(ipAddress.compareTo(zeroipaddress)!=0 && timeout < TIMEOUT){
+            updateoutput(MSG_WIFI_WAITING_IP_ADDRESS);
+            SystemClock.sleep(1000);
+            ip = wifiManager.getConnectionInfo().getIpAddress();
+            ipAddress = Formatter.formatIpAddress(ip);
+            timeout++;
+        }
+
     }
     private void connect_24g_wpawpa2(){
         AddWiFiConfigWpa();
@@ -420,15 +439,15 @@ public class FullscreenActivity extends AppCompatActivity {
         checkwifistatus(ssid_24g_wpawpa2);
         //checkwifistatus();
 
+
         if( timeout < TIMEOUT)
             //showoutput("Connect to " + ssid_24g_wpawpa2 + " successfully.");
             updateoutput(MSG_24G_WPAWPA2_CONNECT);
         else
             updateoutput(MSG_24G_WPAWPA2_FAIL);
 
-        DisableWiFiWpa();
         SystemClock.sleep(TIMEOUT_BETWEEN_CONNECTION);
-
+        DisableWiFiWpa();
     }
 
     private void connect_24g_open() {
@@ -449,8 +468,8 @@ public class FullscreenActivity extends AppCompatActivity {
             //showoutput("Connect to " + ssid_24g_open + " fail.");
             updateoutput(MSG_24G_OPEN_FAIL);
 
-        DisableWiFiOpen();
         SystemClock.sleep(TIMEOUT_BETWEEN_CONNECTION);
+        DisableWiFiOpen();
     }
     private void connect_5g_wpawpa2(){
 

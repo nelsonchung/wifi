@@ -71,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/ssid_24g_wpawpa2"
                 android:layout_gravity="center_horizontal|top"
-                android:text="00Nelson_24G_Private" />
+                android:text="1-TELENET-24g" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -99,7 +99,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/ssid_24g_open"
                 android:layout_gravity="center_horizontal|top"
-                android:text="TELENETHOMESPOT" />
+                android:text="1-TELENETHOMESPOT-24g" />
 
             <TableRow
                 android:layout_width="match_parent"
