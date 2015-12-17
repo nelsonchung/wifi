@@ -127,7 +127,7 @@ public class FullscreenActivity extends AppCompatActivity {
     SupplicantState supState;
     private Handler g_handler;
     private HandlerThread g_handlerthread;
-    WifiEnterpriseConfig enterpriseConfig;
+    WifiEnterpriseConfig enterpriseConfig = new WifiEnterpriseConfig();
     TextView output;
     private String g_strWiFiStatus = new String("Under testing.....");
     private EditText edittext_ssid_24g_wpawpa2, edittext_ssid_24g_password, edittext_ssid_24g_open, edittext_ssid_24g_eap;
@@ -140,6 +140,7 @@ public class FullscreenActivity extends AppCompatActivity {
     WifiConfiguration wificonfig_5g_open = new WifiConfiguration();
     WifiConfiguration wificonfig_5g_wep = new WifiConfiguration();
     WifiConfiguration wificonfig_24g_eap = new WifiConfiguration();
+
 
 
 
@@ -367,7 +368,6 @@ public class FullscreenActivity extends AppCompatActivity {
         updateoutput(MSG_DISCONNECT);
         ssid_24g_eap    = edittext_ssid_24g_eap.getText().toString();
 
-        enterpriseConfig = new WifiEnterpriseConfig();
         wificonfig_24g_eap.SSID = String.format("\"%s\"", ssid_24g_eap);
         wificonfig_24g_eap.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
         wificonfig_24g_eap.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
