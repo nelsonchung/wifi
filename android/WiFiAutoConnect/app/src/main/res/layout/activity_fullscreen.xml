@@ -71,7 +71,7 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/ssid_24g_wpawpa2"
                 android:layout_gravity="center_horizontal|top"
-                android:text="1-TELENET-24g" />
+                android:text="1-TELENET" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -99,7 +99,21 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/ssid_24g_open"
                 android:layout_gravity="center_horizontal|top"
-                android:text="1-TELENETHOMESPOT-24g" />
+                android:text="1-TELENETHOMESPOT" />
+
+            <TextView
+                android:layout_width="300dp"
+                android:layout_height="wrap_content"
+                android:text="3. SSID with radius authentication"
+                android:id="@+id/textView_ssid_24g_eap"
+                android:layout_gravity="center_horizontal|left|top" />
+
+            <EditText
+                android:layout_width="348dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/ssid_24g_eap"
+                android:layout_gravity="center_horizontal|top"
+                android:text="1-TelenetWiFree" />
 
             <TableRow
                 android:layout_width="match_parent"

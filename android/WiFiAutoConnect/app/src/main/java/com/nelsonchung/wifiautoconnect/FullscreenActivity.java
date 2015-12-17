@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.SupplicantState;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiEnterpriseConfig;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.HandlerThread;
@@ -22,6 +23,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
 /**
  * An example full-screen activity that shows and hides the system UI (i.e.
@@ -100,6 +104,13 @@ public class FullscreenActivity extends AppCompatActivity {
     public static final int MSG_24G_OPEN_FAIL = 11;
     public static final int MSG_WIFI_DISABLE = 12;
     public static final int MSG_WIFI_WAITING_IP_ADDRESS = 13;
+    public static final int MSG_24G_EAP_DISCONNECT = 14;
+    public static final int MSG_24G_EAP_CONNECTING = 15;
+    public static final int MSG_24G_EAP_CONNECT = 16;
+    public static final int MSG_24G_EAP_FAIL = 17;
+    //for eap authentication
+    private static final String STR_EAP_USERNAME = "cbn";
+    private static final String STR_EAP_PASSWORD = "cbn";
 
     private WifiManager wifiManager;
     private int netid_24g_wpawpa2, netid_24g_open, netid_24g_eap;
@@ -108,16 +119,18 @@ public class FullscreenActivity extends AppCompatActivity {
     private String ssid_24g_wpawpa2 = new String("00Nelson_24G_Private");
     private String key_24g_wpawpa2 = new String("12345678");
     private String ssid_24g_open = new String("TELENETHOMESPOT");
+    private String ssid_24g_eap = new String("1-TelenetWiFree");
     public static final String zeroipaddress = new String("0.0.0.0");
 
     private ConnectivityManager connManager;
     private NetworkInfo mWifi;
     SupplicantState supState;
-    private Handler g_handler, g_handlerUI;
-    private HandlerThread g_handlerthread, g_handlerthreadUI;
+    private Handler g_handler;
+    private HandlerThread g_handlerthread;
+    WifiEnterpriseConfig enterpriseConfig;
     TextView output;
     private String g_strWiFiStatus = new String("Under testing.....");
-    private EditText edittext_ssid_24g_wpawpa2, edittext_ssid_24g_password, edittext_ssid_24g_open;
+    private EditText edittext_ssid_24g_wpawpa2, edittext_ssid_24g_password, edittext_ssid_24g_open, edittext_ssid_24g_eap;
 
     //wifi configuration
     WifiConfiguration wificonfig_24g_wpawpa2 = new WifiConfiguration();
@@ -126,6 +139,7 @@ public class FullscreenActivity extends AppCompatActivity {
     WifiConfiguration wificonfig_5g_wpawpa2 = new WifiConfiguration();
     WifiConfiguration wificonfig_5g_open = new WifiConfiguration();
     WifiConfiguration wificonfig_5g_wep = new WifiConfiguration();
+    WifiConfiguration wificonfig_24g_eap = new WifiConfiguration();
 
 
 
@@ -155,9 +169,10 @@ public class FullscreenActivity extends AppCompatActivity {
         mContentView = findViewById(R.id.fullscreen_content);
 
         //Nelson Add
-        edittext_ssid_24g_wpawpa2 = (EditText) findViewById(R.id.ssid_24g_wpawpa2);
-        edittext_ssid_24g_password = (EditText) findViewById(R.id.ssid_24g_wpawpa2_password);
-        edittext_ssid_24g_open = (EditText) findViewById(R.id.ssid_24g_open);
+        edittext_ssid_24g_wpawpa2   = (EditText) findViewById(R.id.ssid_24g_wpawpa2);
+        edittext_ssid_24g_password  = (EditText) findViewById(R.id.ssid_24g_wpawpa2_password);
+        edittext_ssid_24g_open      = (EditText) findViewById(R.id.ssid_24g_open);
+        edittext_ssid_24g_eap       = (EditText) findViewById(R.id.ssid_24g_eap);
 
 
         // Set up the user interaction to manually show or hide the system UI.
@@ -226,6 +241,18 @@ public class FullscreenActivity extends AppCompatActivity {
                 case MSG_24G_WPAWPA2_FAIL:
                     output.setText("Connect to "+ssid_24g_wpawpa2+" fail");
                     break;
+                case MSG_24G_EAP_DISCONNECT:
+                    output.setText("Disconnecting from "+ssid_24g_eap);
+                    break;
+                case MSG_24G_EAP_CONNECTING:
+                    output.setText("Connecting to "+ssid_24g_eap+" "+timeout+" times");
+                    break;
+                case MSG_24G_EAP_CONNECT:
+                    output.setText("Connect to "+ssid_24g_eap+" successfully");
+                    break;
+                case MSG_24G_EAP_FAIL:
+                    output.setText("Connect to "+ssid_24g_eap+" fail");
+                    break;
                 case MSG_WIFI_DISABLE:
                     output.setText("WiFi關閉，請打開。");
                     break;
@@ -262,6 +289,11 @@ public class FullscreenActivity extends AppCompatActivity {
         SystemClock.sleep(2000);
         wifiManager.disableNetwork(netid_24g_wpawpa2);
         wifiManager.removeNetwork(netid_24g_wpawpa2);
+    }
+    private void DisableWiFiEap(){
+        SystemClock.sleep(2000);
+        wifiManager.disableNetwork(netid_24g_eap);
+        wifiManager.removeNetwork(netid_24g_eap);
     }
 
     private void AddWiFiConfigWpa(){
@@ -325,18 +357,27 @@ public class FullscreenActivity extends AppCompatActivity {
         wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
     }
     private void AddWiFiConfigEap(){
-        //For EAP(8021X) networks
-        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
-        wificonfig_24g_open.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
-        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-        wificonfig_24g_open.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-        wificonfig_24g_open.allowedAuthAlgorithms.clear();
-        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-        wificonfig_24g_open.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP40);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.WEP104);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-        wificonfig_24g_open.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+
+        /*
+        Ref:
+        http://stackoverflow.com/questions/19170260/how-to-connect-to-wpa-eap-wifi-on-android-with-4-3-api
+        http://developer.android.com/reference/android/net/wifi/WifiEnterpriseConfig.html
+         */
+        cleartimeout();
+        updateoutput(MSG_DISCONNECT);
+        ssid_24g_eap    = edittext_ssid_24g_eap.getText().toString();
+
+        enterpriseConfig = new WifiEnterpriseConfig();
+        wificonfig_24g_eap.SSID = String.format("\"%s\"", ssid_24g_eap);
+        wificonfig_24g_eap.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_EAP);
+        wificonfig_24g_eap.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.IEEE8021X);
+        enterpriseConfig.setIdentity(STR_EAP_USERNAME);
+        enterpriseConfig.setPassword(STR_EAP_PASSWORD);
+        enterpriseConfig.setEapMethod(WifiEnterpriseConfig.Eap.PEAP);
+        wificonfig_24g_eap.enterpriseConfig = enterpriseConfig;
+
+        //Add wifi network config
+        netid_24g_eap = wifiManager.addNetwork(wificonfig_24g_eap);
     }
     /*
     Ref:
@@ -361,6 +402,7 @@ public class FullscreenActivity extends AppCompatActivity {
         while(true) {
             connect_24g_wpawpa2();
             connect_24g_open();
+            connect_24g_eap();
         }
     }
 
@@ -411,6 +453,9 @@ public class FullscreenActivity extends AppCompatActivity {
             }
             else if(str_ssid.equalsIgnoreCase(ssid_24g_wpawpa2)){
                 updateoutput(MSG_24G_WPAWPA2_CONNECTING);
+            }
+            else if(str_ssid.equalsIgnoreCase(ssid_24g_eap)){
+                updateoutput(MSG_24G_EAP_CONNECTING);
             }
             supState = wifiManager.getConnectionInfo().getSupplicantState();
         }
@@ -470,6 +515,26 @@ public class FullscreenActivity extends AppCompatActivity {
 
         SystemClock.sleep(TIMEOUT_BETWEEN_CONNECTION);
         DisableWiFiOpen();
+    }
+    private void connect_24g_eap(){
+        AddWiFiConfigEap();
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(netid_24g_eap, true);
+        wifiManager.reconnect();
+
+        updateoutput(MSG_24G_EAP_CONNECTING);
+        SystemClock.sleep(1000);
+        //checkwifistatus();
+        checkwifistatus(ssid_24g_eap);
+
+        if( timeout < TIMEOUT)
+            updateoutput(MSG_24G_EAP_CONNECT);
+        else
+            updateoutput(MSG_24G_EAP_FAIL);
+
+        SystemClock.sleep(TIMEOUT_BETWEEN_CONNECTION);
+        DisableWiFiEap();
+
     }
     private void connect_5g_wpawpa2(){
 
