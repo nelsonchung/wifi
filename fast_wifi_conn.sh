@@ -170,5 +170,7 @@ if [ "$?" == 0 ]; then
 else
     echo "Not found AP named $SSID_NAME"
 fi
+
+sudo nmcli con delete id $SSID_NAME
 sleep 1  
 done
