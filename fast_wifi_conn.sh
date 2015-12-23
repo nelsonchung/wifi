@@ -20,8 +20,9 @@ if [ "$?" == 0 ]; then
         while [ $count -lt $CONNECTION_TIMEOUT ]
         do
             #echo "Check the connection of $SSID_NAME"
-            #nmcli device status | grep $SSID_NAME | grep "已連線" 
-            nmcli con status | grep $SSID_NAME
+            #Enable this for 15.04
+            nmcli device status | grep $SSID_NAME | grep "已連線" 
+            #nmcli con status | grep $SSID_NAME
             if [ "$?" != 0 ]; then 
                 #echo "Not connect yet."
                 count=`expr $count + 1`
@@ -72,8 +73,9 @@ if [ "$?" == 0 ]; then
         while [ $count -lt $CONNECTION_TIMEOUT ]
         do
             #echo "Check the connection of $SSID_NAME"
-            #nmcli device status | grep $SSID_NAME | grep "已連線" 
-            nmcli con status | grep $SSID_NAME
+            #Enable this for 15.04
+            nmcli device status | grep $SSID_NAME | grep "已連線" 
+            #nmcli con status | grep $SSID_NAME
             if [ "$?" != 0 ]; then 
                 #echo "Not connect yet."
                 count=`expr $count + 1`
@@ -141,9 +143,10 @@ if [ "$?" == 0 ]; then
         count=1
         while [ $count -lt $CONNECTION_TIMEOUT ]
         do
-            #echo "Check the connection of $SSID_NAME"
-            #nmcli device status | grep $SSID_NAME | grep "已連線" 
-            nmcli con status | grep $SSID_NAME
+            ##echo "Check the connection of $SSID_NAME"
+            #Enable this for 15.04
+            nmcli device status | grep $SSID_NAME | grep "已連線" 
+            #nmcli con status | grep $SSID_NAME
             if [ "$?" != 0 ]; then 
                 #echo "Not connect yet."
                 count=`expr $count + 1`
