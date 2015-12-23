@@ -9,7 +9,11 @@ else
 fi
 
 filename='tmp.txt'
-nmcli c list | awk -F ' ' '{print $1 " " $2}' > $filename
+if [ "$UBUNTU_VER" == "15.04" ] || [ "$UBUNTU_VER" == "16.04" ]; then
+    nmcli connection show | awk -F ' ' '{print $1 " " $2}' > $filename
+else
+    nmcli c list | awk -F ' ' '{print $1 " " $2}' > $filename
+fi
 exec < $filename
 
 while read line
