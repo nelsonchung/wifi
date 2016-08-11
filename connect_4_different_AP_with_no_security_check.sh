@@ -8,7 +8,12 @@ export SSID_NAME_1="Nelson_24G_Private"
 export SSID_NAME_2="Nelson_24G_Public"
 export SSID_NAME_3="Nelson_5G_Private"
 export SSID_NAME_4="Nelson_5G_Public"
+export SSID_NAME_5="Test_Nelson_24G_Private"
+export SSID_NAME_6="Test_Nelson_24G_Public"
+export SSID_NAME_7="Test_Nelson_5G_Private"
+export SSID_NAME_8="Test_Nelson_5G_Public"
 export SSID_NAME_2_TIMEOUT=600
+export SSID_NUM=8
 
 
 #No LSB modules are available.
@@ -24,7 +29,7 @@ index_cnt=1
 while [ 1 ]
 do
 
-index_cnt=`expr $index_cnt % 4`
+index_cnt=`expr $index_cnt % $SSID_NUM`
 index_cnt=`expr $index_cnt + 1`
 if [ $index_cnt -eq 1 ]; then
     SSID_NAME=$SSID_NAME_1
@@ -34,6 +39,14 @@ elif [ $index_cnt -eq 3 ]; then
     SSID_NAME=$SSID_NAM_3
 elif [ $index_cnt -eq 4 ]; then
     SSID_NAME=$SSID_NAME_4
+elif [ $index_cnt -eq 5 ]; then
+    SSID_NAME=$SSID_NAME_5
+elif [ $index_cnt -eq 6 ]; then
+    SSID_NAME=$SSID_NAME_6
+elif [ $index_cnt -eq 7 ]; then
+    SSID_NAME=$SSID_NAME_7
+elif [ $index_cnt -eq 8 ]; then
+    SSID_NAME=$SSID_NAME_8
 fi
 nmcli -p dev wifi list | grep $SSID_NAME
 echo "Connecting to "$SSID_NAME
@@ -86,21 +99,9 @@ fi
 
 sleep 5
 #clear the configure file
+echo "Clear configure file for "$SSID_NAME
 #configure file still exist when connection fail
-#if [ "$res_1" == "0" ]; then
-#echo "Delete configure file - "$SSID_NAME_1
-sudo nmcli con delete id $SSID_NAME_1
-#fi
+sudo nmcli con delete id $SSID_NAME
 
-#if [ "$res_2" == "0" ]; then
-#echo "Delete configure file - "$SSID_NAME_2
-sudo nmcli con delete id $SSID_NAME_2
-#fi
-
-sudo nmcli con delete id $SSID_NAME_3
-sudo nmcli con delete id $SSID_NAME_4
-
-#SSID_NAME=$SSID_NAME_3
-#sudo nmcli con delete id $SSID_NAME
 sleep 1  
 done
